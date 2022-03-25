@@ -34,10 +34,11 @@
       <el-table-column prop="keyCode" label="产品代号（唯一码）"/>
       <el-table-column prop="desc" label="描述" show-overflow-tooltip/>
       <el-table-column prop="operator" label="操作人"/>
-      <el-table-column prop="update" label="操作时间"/>
+      <el-table-column :formatter="formatDate" prop="update" label="操作时间"/>
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-link icon="el-icon-edit" @click="dialogProductUpdate(scope.row)">编辑</el-link>
+          <el-link icon="el-icon-delete" @click="pHardRemove(scope.row.id)">删除</el-link>
         </template>
       </el-table-column>
     </el-table>
@@ -46,9 +47,10 @@
 
 <script>
 // 引用src/api/proudct 配置的请求列表方法
-import { apiProductList, apiProductCreate, apiProductUpdate } from '@/api/product'
+import { apiProductList, apiProductCreate, apiProductUpdate, apiProductDelete } from '@/api/product'
 // 导入全局存储
 import store from '@/store'
+import moment from 'moment'
 
 export default {
   name: 'Product', // 页面名称
@@ -87,6 +89,14 @@ export default {
         // 将返回的结果赋值给变量 tableData
         this.tableData = response.data
       })
+    },
+    formatDate(row, column) {
+      const date = row[column.property]
+      if (date === undefined) {
+        return ''
+      }
+      // 使用moment格式化时间，由于我的数据库是默认时区，偏移量设置0，各自根据情况进行配置
+      return moment(date).utcOffset(0).format('YYYY-MM-DD HH:mm')
     },
     dialogProduct() {
       // 添加先初始化空状态
@@ -139,6 +149,30 @@ export default {
         this.dialogProductShow = false
         // 重新查询刷新数据显示
         this.getProductList()
+      })
+    },
+    pHardRemove(id) {
+      // 对应的参数是 (提示内容，标题 {自定义确定按钮文案，自定义取消按钮文案, 对话框类型}
+      this.$confirm('此操作将永久删除该项目, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+        // then 点击confirmButton后执行的方法，否则是不执行关闭对话框
+      }).then(() => {
+        // vue click时候传d的id需要定义参数
+        apiProductDelete(id).then(res => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          // 重新查询刷新数据显示
+          this.getProductList()
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
       })
     }
   }

@@ -121,3 +121,28 @@ def product_update():
             connection.commit()
 
         return resp_data
+
+
+# [DELETE方法]根据id实际删除项目信息
+@app_product.route("/api/product/delete", methods=['DELETE'])
+def product_delete():
+    # 返回的reponse
+    resp_data = {
+        "code": 20000,
+        "message": "success",
+        "data": []
+    }
+    # 方式1：通过params 获取id
+    ID = request.args.get('id')
+    # 做个参数必填校验
+    if ID is None:
+        resp_data["code"] = 20002
+        resp_data["message"] = "请求id参数为空"
+        return resp_data
+    # 重新链接数据库
+    connection = connectDB()
+    with connection.cursor() as cursor:
+        sql = "DELETE from `products` where id=%s"
+        cursor.execute(sql, ID)
+        connection.commit()
+    return resp_data

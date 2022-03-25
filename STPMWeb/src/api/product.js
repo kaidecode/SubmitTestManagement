@@ -22,3 +22,13 @@ export function apiProductUpdate(requestBody) {
     data: requestBody
   })
 }
+
+export function apiProductDelete(id) {
+  return request({
+    url: '/api/product/delete',
+    method: 'delete',
+    params: {
+      'id': id
+    }
+  })
+}
