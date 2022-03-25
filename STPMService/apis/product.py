@@ -42,7 +42,7 @@ def product_list():
 
 
 # [POST方法]实现新建数据的数据库插入
-@app_product.route("/api/product/create",methods=['POST'])
+@app_product.route("/api/product/create", methods=['POST'])
 def product_create():
     # 初始化数据库链接
     connection = connectDB()
@@ -79,4 +79,45 @@ def product_create():
             connection.commit()
 
         # 按返回模版格式进行json结果返回
+        return resp_data
+
+
+# [POST方法]实现新建数据的数据库插入
+@app_product.route("/api/product/update", methods=['POST'])
+def product_update():
+
+    # 按返回模版格式进行json结果返回
+    resp_data = {
+        "code": 20000,
+        "message": "success",
+        "data": []
+    }
+
+    # 获取请求传递json
+    body = request.get_data()
+    body = json.loads(body)
+    # 初始化数据库链接
+    connection = connectDB()
+
+    with connection:
+        with connection.cursor() as cursor:
+            select = "SELECT * FROM `products` WHERE `keyCode`=%s"
+            cursor.execute(select, (body["keyCode"],))
+            result = cursor.fetchall()
+
+            # 有数据并且不等于本身则为重复，封装提示直接返回
+            if len(result) > 0 and result[0]["id"] != body["id"]:
+                resp_data["code"] = 20001
+                resp_data["message"] = "唯一编码keyCode已存在"
+                return resp_data
+
+        # 如果没有重复，定义新的链接，进行更新操作
+        with connection.cursor() as cursor:
+            # 拼接更新语句,并用参数化%s构造防止基本的SQL注入
+            # 条件为id，更新时间用数据库NOW()获取当前时间
+            sql = "UPDATE `products` SET `keyCode`=%s, `title`=%s,`desc`=%s,`operator`=%s, `update`= NOW() WHERE id=%s"
+            cursor.execute(sql, (body["keyCode"], body["title"], body["desc"], body["operator"], body['id']))
+            # 提交执行保存更新数据
+            connection.commit()
+
         return resp_data

@@ -14,3 +14,11 @@ export function apiProductCreate(requestBody) {
     data: requestBody
   })
 }
+
+export function apiProductUpdate(requestBody) {
+  return request({
+    url: '/api/product/update',
+    method: 'post',
+    data: requestBody
+  })
+}
