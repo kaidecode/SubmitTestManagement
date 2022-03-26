@@ -32,3 +32,15 @@ export function apiProductDelete(id) {
     }
   })
 }
+
+// 软删除，更改数据状态
+export function apiProductRemove(id) {
+  return request({
+    url: '/api/product/remove',
+    method: 'post',
+    params: {
+      'id': id
+    }
+  })
+}
+

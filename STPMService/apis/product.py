@@ -28,8 +28,8 @@ def product_list():
     connection = connectDB()
     # 使用python的with..as控制流语句（相当于简化的try except finally）
     with connection.cursor() as cursor:
-        # 查询产品信息表-按更新时间新旧排序
-        sql = "SELECT * FROM `Products` ORDER BY `Update` DESC"
+        # 查询产品信息表-按更新时间新旧排序 且 状态为0有效
+        sql = "SELECT * FROM `products` WHERE `status`=0 ORDER BY `update` DESC"
         cursor.execute(sql)
         data = cursor.fetchall()
 
@@ -60,7 +60,8 @@ def product_create():
     with connection:
         # 先做个查询，判断keyCode是否重复（这里的关键词最初定义为唯一项目编号或者为服务的应用名）
         with connection.cursor() as cursor:
-            select = "SELECT * FROM `products` WHERE `keyCode`=%s"
+            # 查询需要过滤状态为有效的
+            select = "SELECT * FROM `products` WHERE `keyCode`=%s AND `status`=0"
             cursor.execute(select, (body["keyCode"],))
             result = cursor.fetchall()
 
@@ -101,7 +102,8 @@ def product_update():
 
     with connection:
         with connection.cursor() as cursor:
-            select = "SELECT * FROM `products` WHERE `keyCode`=%s"
+            # 查询需要过滤状态为有效的
+            select = "SELECT * FROM `products` WHERE `keyCode`=%s AND `status`=0"
             cursor.execute(select, (body["keyCode"],))
             result = cursor.fetchall()
 
@@ -145,4 +147,31 @@ def product_delete():
         sql = "DELETE from `products` where id=%s"
         cursor.execute(sql, ID)
         connection.commit()
+    return resp_data
+
+
+# [POST方法]根据id更新状态项目状态，做软删除
+@app_product.route("/api/product/remove", methods=['POST'])
+def product_remove():
+    # 返回的reponse
+    resp_data = {
+        "code": 20000,
+        "message": "success",
+        "data": []
+    }
+    ID = request.args.get('id')
+    # 做个参数必填校验
+    if ID is None:
+        resp_data["code"] = 20002
+        resp_data["message"] = "请求id参数为空"
+        return resp_data
+    # 重新链接数据库
+    connection = connectDB()
+    with connection.cursor() as cursor:
+        # 状态默认正常状态为0，删除状态为1
+        # alter table products add status int default 0 not null comment '状态有效0，无效0' after `desc`;
+        sql = "UPDATE `products` SET `status`=1 WHERE id=%s"
+        cursor.execute(sql, ID)
+        connection.commit()
+
     return resp_data

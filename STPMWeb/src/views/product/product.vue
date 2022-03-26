@@ -38,6 +38,7 @@
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-link icon="el-icon-edit" @click="dialogProductUpdate(scope.row)">编辑</el-link>
+          <el-link icon="el-icon-delete" @click="pSoftRemove(scope.row.id)">停用</el-link>
           <el-link icon="el-icon-delete" @click="pHardRemove(scope.row.id)">删除</el-link>
         </template>
       </el-table-column>
@@ -47,7 +48,7 @@
 
 <script>
 // 引用src/api/proudct 配置的请求列表方法
-import { apiProductList, apiProductCreate, apiProductUpdate, apiProductDelete } from '@/api/product'
+import { apiProductList, apiProductCreate, apiProductUpdate, apiProductDelete, apiProductRemove } from '@/api/product'
 // 导入全局存储
 import store from '@/store'
 import moment from 'moment'
@@ -161,6 +162,27 @@ export default {
       }).then(() => {
         // vue click时候传d的id需要定义参数
         apiProductDelete(id).then(res => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          // 重新查询刷新数据显示
+          this.getProductList()
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+    pSoftRemove(id) {
+      this.$confirm('此操作将停用不显示, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        apiProductRemove(id).then(res => {
           this.$message({
             type: 'success',
             message: '删除成功!'
