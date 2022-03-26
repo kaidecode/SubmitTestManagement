@@ -3,6 +3,19 @@
   <div class="app-container">
     <div class="filter-container">
       <el-button type="primary" icon="el-icon-plus" style="float:right" @click="dialogProduct()">新增</el-button>
+      <!--搜索部分开始-->
+      <el-form :inline="true" :model="search">
+        <el-form-item label="名称：">
+          <el-input v-model="search.title" placeholder="支持模糊查询" style="width: 200px;" clearable/>
+        </el-form-item>
+        <el-form-item label="项目代号（唯一码）：">
+          <el-input v-model="search.keyCode" placeholder="支持模糊查询" style="width: 200px;" clearable/>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" plain @click="searchProduct()">查询</el-button>
+        </el-form-item>
+      </el-form>
+      <!--搜索部分结束-->
     </div>
     <!--对话框嵌套表，使用el-dialog-->
     <el-dialog :title="dialogProductStatus==='ADD'?'添加产品或项目':'修改产品或项目'" :visible.sync="dialogProductShow">
@@ -28,17 +41,17 @@
     </el-dialog>
     <!--样式组件 参考 https://element.eleme.cn/#/zh-CN/component/table-->
     <el-table :data="tableData"><!--:data 绑定data()的数组值,会动态根据其变化而变化-->
-      <el-table-column prop="id" label="产品id"/>
+      <el-table-column prop="id" label="项目id"/>
       <!--:data prop绑定{}中的key，label为自定义显示的列表头-->
-      <el-table-column prop="title" label="名称"/>
-      <el-table-column prop="keyCode" label="产品代号（唯一码）"/>
+      <el-table-column prop="title" label="项目名称"/>
+      <el-table-column prop="keyCode" label="项目代号（唯一码）"/>
       <el-table-column prop="desc" label="描述" show-overflow-tooltip/>
       <el-table-column prop="operator" label="操作人"/>
       <el-table-column :formatter="formatDate" prop="update" label="操作时间"/>
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-link icon="el-icon-edit" @click="dialogProductUpdate(scope.row)">编辑</el-link>
-          <el-link icon="el-icon-delete" @click="pSoftRemove(scope.row.id)">停用</el-link>
+          <el-link icon="el-icon-circle-close" @click="pSoftRemove(scope.row.id)">停用</el-link>
           <el-link icon="el-icon-delete" @click="pHardRemove(scope.row.id)">删除</el-link>
         </template>
       </el-table-column>
@@ -48,7 +61,7 @@
 
 <script>
 // 引用src/api/proudct 配置的请求列表方法
-import { apiProductList, apiProductCreate, apiProductUpdate, apiProductDelete, apiProductRemove } from '@/api/product'
+import { apiProductList, apiProductCreate, apiProductUpdate, apiProductDelete, apiProductRemove, apiProductSearch } from '@/api/product'
 // 导入全局存储
 import store from '@/store'
 import moment from 'moment'
@@ -60,6 +73,11 @@ export default {
     return {
       // 获得登录的名字
       op_user: store.getters.name,
+      // 搜索条件
+      search: {
+        title: undefined,
+        keyCode: undefined
+      },
       // 定义产品参数
       product: {
         id: undefined,
@@ -195,6 +213,12 @@ export default {
           type: 'info',
           message: '已取消删除'
         })
+      })
+    },
+    // 条件搜索功能
+    searchProduct() {
+      apiProductSearch(this.search).then(res => {
+        this.tableData = res.data
       })
     }
   }

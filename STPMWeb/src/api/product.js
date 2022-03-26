@@ -44,3 +44,11 @@ export function apiProductRemove(id) {
   })
 }
 
+// 条件查询
+export function apiProductSearch(params) {
+  return request({
+    url: '/api/product/search',
+    method: 'get',
+    params: params
+  })
+}

@@ -175,3 +175,40 @@ def product_remove():
         connection.commit()
 
     return resp_data
+
+
+# 搜索接口
+@app_product.route("/api/product/search", methods=['GET'])
+def product_search():
+    # 获取title和keyCode
+    title = request.args.get('title')
+    keyCode = request.args.get('keyCode')
+
+    # 基础语句定义
+    sql = "SELECT * FROM `products` WHERE `status`=0"
+
+    # 如果title不为空，拼接tilite的模糊查询
+    if title is not None:
+        sql = sql + " AND `title` LIKE '%{}%'".format(title)
+    # 如果keyCode不为空，拼接tilite的模糊查询
+    if keyCode is not None:
+        sql = sql + " AND `keyCode` LIKE '%{}%'".format(keyCode)
+
+    # 排序最后拼接
+    sql = sql + " ORDER BY `update` DESC"
+
+    connection = connectDB()
+    # 使用python的with..as控制流语句（相当于简化的try except finally）
+    with connection.cursor() as cursor:
+        # 按照条件进行查询
+        print(sql)
+        cursor.execute(sql)
+        data = cursor.fetchall()
+
+    # 按返回模版格式进行json结果返回
+    resp_data = {
+        "code": 20000,
+        "data": data
+    }
+
+    return resp_data
