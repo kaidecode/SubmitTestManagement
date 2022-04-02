@@ -16,3 +16,13 @@ export function apiAppsProduct() {
     method: 'get'
   })
 }
+
+// 调用应用增加/修改统一接口
+export function apiAppsCommit(requestBody) {
+  return request({
+    url: '/api/application/update',
+    method: 'post',
+    data: requestBody
+  })
+}
+

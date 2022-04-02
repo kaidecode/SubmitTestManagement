@@ -68,17 +68,78 @@
         @current-change="handleCurrentChange"
       />
     </div>
+    <div>
+      <el-drawer
+        :title="appAction==='ADD'? '添加应用': '修改应用'"
+        :visible.sync="drawerVisible"
+        size="30%"
+        direction="rtl"
+      >
+        <div>
+          <el-form ref="appInfo" :model="appInfo" :rules="rules" label-width="120px">
+            <el-form-item label="应用ID" prop="appId">
+              <el-input v-model="appInfo.appId" :disabled="appAction==='ADD'? false : true" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="归属分类" prop="productId">
+              <el-select v-model="appInfo.productId" style="width: 300px">
+                <el-option
+                  v-for="item in options"
+                  :key="item.id"
+                  :label="item.title"
+                  :value="item.id">
+                  <span style="float: left">{{ item.keyCode }}</span>
+                  <span style="float: right; color: #8492a6; font-size: 13px">{{ item.title }}</span>
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="应用描述">
+              <el-input v-model="appInfo.note" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="测试负责" prop="tester">
+              <el-input v-model="appInfo.tester" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="研发负责" prop="developer">
+              <el-input v-model="appInfo.developer" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="产品负责" prop="producer">
+              <el-input v-model="appInfo.producer" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="默认抄送">
+              <el-input v-model="appInfo.CcEmail" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="代码地址">
+              <el-input v-model="appInfo.gitCode" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="相关wiki">
+              <el-input v-model="appInfo.wiki" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="更多信息">
+              <el-input v-model="appInfo.more" style="width: 300px" />
+            </el-form-item>
+            <el-form-item>
+              <span class="dialog-footer">
+                <el-button @click="drawerVisible=false">取 消</el-button>
+                <el-button type="primary" @click="commitApp('appInfo')">提 交</el-button>
+              </span>
+            </el-form-item>
+          </el-form>
+        </div>
+      </el-drawer>
+    </div>
   </div>
 </template>
 
 <script>
 import moment from 'moment'
-import { apiAppsProduct, apiAppsSearch } from '@/api/apps'
+import store from '@/store'
+import { apiAppsProduct, apiAppsSearch, apiAppsCommit } from '@/api/apps'
 
 export default {
   name: 'Apps',
   data() {
     return {
+      // 获得登录的名字
+      op_user: store.getters.name,
       search: {
         productId: '',
         appId: '',
@@ -91,7 +152,45 @@ export default {
       },
       options: [],
       total: 0,
-      tableData: []
+      tableData: [],
+      // 定义动作
+      appAction: 'ADD',
+      // 控制抽屉显示隐藏
+      drawerVisible: false,
+      // 添加/修改绑定的数据
+      appInfo: {
+        id: '',
+        appId: '',
+        productId: '',
+        note: '',
+        tester: '',
+        developer: '',
+        producer: '',
+        CcEmail: '',
+        gitCode: '',
+        wiki: '',
+        more: '',
+        creteUser: '',
+        updateUser: ''
+      },
+      // 规则设定
+      rules: {
+        appId: [
+          { required: true, message: '请输应用名称', trigger: 'blur' }
+        ],
+        productId: [
+          { required: true, message: '请选择所属范围', trigger: 'change' }
+        ],
+        tester: [
+          { required: true, message: '请输入测试负责人', trigger: 'blur' }
+        ],
+        developer: [
+          { required: true, message: '请输入开发负责人', trigger: 'blur' }
+        ],
+        producer: [
+          { required: true, message: '请输入产品负责人', trigger: 'blur' }
+        ]
+      }
     }
   },
   // 页面生命周期中的创建阶段调用
@@ -132,15 +231,74 @@ export default {
       this.searchClick()
     },
     addApp() {
-      this.$message({
-        message: '我是待实现的CASE',
-        type: 'warning'
-      })
+      // 定义动作，以抽屉做判断
+      this.appAction = 'ADD'
+      // 添加数据初始化
+      this.appInfo.id = ''
+      this.appInfo.appId = ''
+      this.appInfo.productId = ''
+      this.appInfo.note = ''
+      this.appInfo.tester = ''
+      this.appInfo.developer = ''
+      this.appInfo.producer = ''
+      this.appInfo.CcEmail = ''
+      this.appInfo.gitCode = ''
+      this.appInfo.wiki = ''
+      this.appInfo.more = ''
+      this.appInfo.creteUser = this.op_user
+      this.appInfo.updateUser = this.op_user
+      // 初始化完成后显示抽屉
+      this.drawerVisible = true
+      // 如果有遗留验证清空
+      // this.$nextTick(() => {
+      //   this.$refs['appInfo'].resetFields()
+      // })
     },
-    updateApp() {
-      this.$message({
-        message: '我是待实现的CASE',
-        type: 'warning'
+    updateApp(row) {
+      // 定义动作，以抽屉做判断
+      this.appAction = 'UPDATE'
+      // 初始化完成后显示抽屉
+      this.drawerVisible = true
+      // 如果有遗留验证清空
+      // this.$nextTick(() => {
+      //   this.$refs['appInfo'].resetFields()
+      // })
+      // 选择数据反填抽屉表单中
+      this.appInfo.id = row.id
+      this.appInfo.appId = row.appId
+      this.appInfo.productId = row.productId
+      this.appInfo.note = row.note
+      this.appInfo.tester = row.tester
+      this.appInfo.developer = row.developer
+      this.appInfo.producer = row.producer
+      this.appInfo.CcEmail = row.CcEmail
+      this.appInfo.gitCode = row.gitCode
+      this.appInfo.wiki = row.wiki
+      this.appInfo.more = row.more
+      this.appInfo.creteUser = row.creteUser
+      this.appInfo.updateUser = row.updateUser
+    },
+    commitApp() {
+      // 上边form定义ref，验证通过if valid的方式判断
+      this.$refs['appInfo'].validate((valid) => {
+        if (valid) {
+          this.appInfo.updateUser = this.op_user
+          apiAppsCommit(this.appInfo).then(response => {
+            // 如果request.js没有拦截即表示成功，给出对应提示和操作
+            this.$notify({
+              title: '成功',
+              message: this.appAction === 'ADD' ? '应用添加成功' : '应用修改成功',
+              type: 'success'
+            })
+            // 关闭对话框
+            this.drawerVisible = false
+            // 重新查询刷新数据显示
+            this.getProductList()
+            this.searchClick()
+          })
+        } else {
+          return false
+        }
       })
     }
   }
