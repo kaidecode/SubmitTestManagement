@@ -56,15 +56,23 @@ export const constantRoutes = [
   },
 
   {
-    path: '/product',
+    path: '/settings',
     component: Layout,
-    redirect: '/product',
+    redirect: '/settings',
+    meta: { title: '基础管理', icon: 'el-icon-s-help' },
     children: [{
       path: 'product',
-      name: 'product',
+      name: 'Product',
       component: () => import('@/views/product/product'),
-      meta: { title: '项目/产品管理线', icon: 'table' }
-    }]
+      meta: { title: '项目产品分类', icon: 'table' }
+    },
+    {
+      path: 'apps',
+      name: 'apps',
+      component: () => import('@/views/product/apps'),
+      meta: { title: '服务应用管理', icon: 'form' }
+    }
+    ]
   },
 
   /* {

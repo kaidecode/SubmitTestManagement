@@ -18,7 +18,7 @@ def connectDB():
                                  database='STPMDatas',  # 数据表
                                  charset='utf8mb4',  # 字符编码
                                  cursorclass=pymysql.cursors.DictCursor)  # 结果作为字典返回游标
-    # 返回新的书库链接对象
+    # 返回新的数据库链接对象
     return connection
 
 
