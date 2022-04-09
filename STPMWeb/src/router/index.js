@@ -75,6 +75,40 @@ export const constantRoutes = [
     ]
   },
 
+  {
+    path: '/tmp',
+    component: Layout,
+    redirect: '/tmp',
+    meta: { title: '提测管理', icon: 'dashboard' },
+    children: [
+      {
+        path: 'test',
+        name: 'test',
+        component: () => import('@/views/test/index'),
+        meta: { title: '提测管理', icon: 'dashboard' }
+      }
+      /* {
+        path: 'commit',
+        name: 'commit',
+        hidden: true,
+        component: () => import('@/views/test/manger/commit'),
+        meta: { title: '需求提测', icon: 'dashboard' }
+      },
+      {
+        path: 'mytest',
+        name: 'mytest',
+        component: () => import('@/views/test/mytest'),
+        meta: { title: '我的提测', icon: 'dashboard' }
+      },
+      {
+        path: 'mydev',
+        name: 'mydev',
+        component: () => import('@/views/test/mydev'),
+        meta: { title: '我的测试', icon: 'dashboard' }
+      }*/
+    ]
+  },
+
   /* {
     path: '/example',
     component: Layout,
