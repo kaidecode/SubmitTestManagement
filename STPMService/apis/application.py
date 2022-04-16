@@ -79,15 +79,15 @@ def searchBykey():
         with connection.cursor() as cursor:
             cursor.execute('SELECT COUNT(*) as `count` FROM `apps` WHERE `status`=0' + sql)
             total = cursor.fetchall()
-            print("1: ")
-            print(total)
+            # print("1: ")
+            # print(total)
 
         sql = sql + ' ORDER BY `updateDate` DESC LIMIT {},{}'.format((currentPage - 1) * pageSize, pageSize)
         # 执行查询
         with connection.cursor() as cursor:
             # 按照条件进行查询
             cursor.execute('SELECT P.title, A.* FROM apps AS A,products AS P WHERE A.productId = P.id and A.`status`=0' + sql)
-            sqll = 'SELECT P.title, A.* FROM apps AS A,products AS P WHERE A.productId = P.id and A.`status`=0' + sql
+            # sqll = 'SELECT P.title, A.* FROM apps AS A,products AS P WHERE A.productId = P.id and A.`status`=0' + sql
             # print("我是下面的输出 " + sqll)
             data = cursor.fetchall()
 
@@ -95,8 +95,8 @@ def searchBykey():
     response = format.resp_format_success
     response['data'] = data
     # response['total'] = 15
-    print("2: ")
-    print(total)
+    # print("2: ")
+    # print(total)
     response['total'] = total[0]['count']
     print(response)
     return response
@@ -165,3 +165,28 @@ def product_update():
                 connection.commit()
 
         return resp_success
+
+
+@app_application.route("/api/application/options", methods=['GET'])
+def getOptionsForSelected():
+
+    value = request.args.get('value', '')
+    response = format.resp_format_success
+
+    connection = pool.connection()
+
+    with connection.cursor() as cursor:
+
+        # 先按appid模糊搜索，没有数据再按note搜索
+        sqlByAppId = "SELECT * FROM apps WHERE appId LIKE '%"+value+"%'"
+        cursor.execute(sqlByAppId)
+        dataByppId = cursor.fetchall()
+        if len(dataByppId) > 0 :
+            response['data'] = dataByppId
+        else:
+            sqlByNote = "SELECT * FROM apps WHERE note LIKE '%" + value + "%'"
+            cursor.execute(sqlByNote)
+            dataByNote = cursor.fetchall()
+            response['data'] = dataByNote
+
+    return response

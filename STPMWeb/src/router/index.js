@@ -86,8 +86,8 @@ export const constantRoutes = [
         name: 'test',
         component: () => import('@/views/test/index'),
         meta: { title: '提测管理', icon: 'dashboard' }
-      }
-      /* {
+      },
+      {
         path: 'commit',
         name: 'commit',
         hidden: true,
@@ -105,7 +105,7 @@ export const constantRoutes = [
         name: 'mydev',
         component: () => import('@/views/test/mydev'),
         meta: { title: '我的测试', icon: 'dashboard' }
-      }*/
+      }
     ]
   },
 

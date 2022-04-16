@@ -142,6 +142,11 @@ export default {
       }
     }
   },
+  mounted() {
+    if (this.$route.params.needUp && this.$route.params.needUp === 'true') {
+      this.searchClick()
+    }
+  },
   created() {
     this.productList()
     this.searchClick()
@@ -216,7 +221,7 @@ export default {
       this.searchClick()
     },
     doCommit() {
-      this.$router.push('commit')
+      this.$router.push({ name: 'commit', params: { action: 'ADD' }})
     },
     startTest() {
       console.log('开始测试')
