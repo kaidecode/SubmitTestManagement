@@ -69,7 +69,7 @@
             <el-link type="primary" v-if="scope.row.status===9" >删除结果</el-link>
             <!--<label>菜单逻辑判断二列</label>-->
             <el-divider direction="vertical"></el-divider>
-            <el-link type="primary" v-if="[1,2].includes(scope.row.status)">编辑提测</el-link>
+            <el-link v-if="[1,2].includes(scope.row.status)" type="primary" @click="doUpdate(scope.row)">编辑提测</el-link>
             <el-link type="primary" v-if="[3,4,9].includes(scope.row.status)">编辑结果</el-link>
             <el-divider direction="vertical"></el-divider>
             <el-link type="primary" >提测详情</el-link>
@@ -222,6 +222,9 @@ export default {
     },
     doCommit() {
       this.$router.push({ name: 'commit', params: { action: 'ADD' }})
+    },
+    doUpdate(row) {
+      this.$router.push({ path: '/tmp/commit?action=UPDATE&id=' + row.id })
     },
     startTest() {
       console.log('开始测试')
