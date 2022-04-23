@@ -31,3 +31,27 @@ export function reqUpdate(body) {
     data: body
   })
 }
+
+export function changeStatus(body) {
+  return request({
+    url: '/api/test/change',
+    method: 'post',
+    data: body
+  })
+}
+
+export function reportSave(body) {
+  return request({
+    url: '/api/report/save',
+    method: 'post',
+    data: body
+  })
+}
+
+export function reportTestInfo(id) {
+  return request({
+    url: '/api/report/info',
+    method: 'get',
+    params: { id }
+  })
+}

@@ -30,17 +30,17 @@
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
-            align="right">
-          </el-date-picker>
+            align="right"
+          />
         </el-form-item>
         <el-form-item label="测试状态">
           <el-select v-model="search.status" placeholder="请选择">
             <el-option value="" label="所有" />
-            <el-option key=1 label="已提测" value=1></el-option>
-            <el-option key=2 label="测试中" value=2></el-option>
-            <el-option key=3 label="通过" value=3></el-option>
-            <el-option key=4 label="失败" value=4></el-option>
-            <el-option key=9 label="废弃" value=9></el-option>
+            <el-option key="1" label="已提测" value="1" />
+            <el-option key="2" label="测试中" value="2" />
+            <el-option key="3" label="通过" value="3" />
+            <el-option key="4" label="失败" value="4" />
+            <el-option key="9" label="废弃" value="9" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -50,11 +50,11 @@
       <el-button type="primary" icon="el-icon-plus" style="float:right" @click="doCommit()">新建提测</el-button>
     </div>
     <div>
-      <el-table :data="testData">
+      <el-table :data="testData" v-loading="loading">
         <!--:data prop绑定{}中的key，label为自定义显示的列表头-->
         <el-table-column prop="appId" label="应用ID" />
         <el-table-column prop="title" label="提测标题" show-overflow-tooltip />
-        <el-table-column :formatter="formatStatus" prop="status" label="测试状态"/>
+        <el-table-column :formatter="formatStatus" prop="status" label="测试状态" />
         <el-table-column :formatter="formatType" prop="type" label="类型" />
         <el-table-column prop="developer" label="提测人" />
         <el-table-column prop="tester" label="测试人" />
@@ -63,16 +63,16 @@
         <el-table-column label="操作" width="300">
           <template slot-scope="scope">
             <!--<label>菜单逻辑判断一列</label>-->
-            <el-link type="primary" v-if="scope.row.status===1" @click="startTest(scope.row)">开始测试</el-link>
-            <el-link type="primary" v-if="scope.row.status===2" >添加结果</el-link>
-            <el-link type="primary" v-if="scope.row.status===3 || scope.row.status == 4" >查看报告</el-link>
-            <el-link type="primary" v-if="scope.row.status===9" >删除结果</el-link>
+            <el-link v-if="scope.row.status===1" type="primary" @click="startTest(scope.row)">开始测试</el-link>
+            <el-link v-if="scope.row.status===2" type="primary" @click="doReport(scope.row)">添加结果</el-link>
+            <el-link v-if="scope.row.status===3 || scope.row.status == 4" type="primary" @click="showReportInfo(scope.row)">查看报告</el-link>
+            <el-link v-if="scope.row.status===9" type="primary" @click="deleteTest(scope.row)">删除结果</el-link>
             <!--<label>菜单逻辑判断二列</label>-->
-            <el-divider direction="vertical"></el-divider>
+            <el-divider direction="vertical" />
             <el-link v-if="[1,2].includes(scope.row.status)" type="primary" @click="doUpdate(scope.row)">编辑提测</el-link>
-            <el-link type="primary" v-if="[3,4,9].includes(scope.row.status)">编辑结果</el-link>
-            <el-divider direction="vertical"></el-divider>
-            <el-link type="primary" >提测详情</el-link>
+            <el-link v-if="[3,4,9].includes(scope.row.status)" type="primary" @click="updateReport(scope.row)">编辑结果</el-link>
+            <el-divider direction="vertical" />
+            <el-link type="primary" @click="showRequestInfo(scope.row)">提测详情</el-link>
           </template>
         </el-table-column>
       </el-table>
@@ -90,12 +90,43 @@
         @current-change="handleCurrentChange"
       />
     </div>
+    <div>
+      <el-dialog :title="requestInfo.title" :visible.sync="requestInfoVisible">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="提测人">{{requestInfo.developer}}</el-descriptions-item>
+          <el-descriptions-item label="测试人">{{requestInfo.tester}}</el-descriptions-item>
+          <el-descriptions-item label="提测版本">{{requestInfo.version}}</el-descriptions-item>
+          <el-descriptions-item label="提测类型">{{formatInfoType(requestInfo.type)}}</el-descriptions-item>
+          <el-descriptions-item label="应用ID" :span="2">{{requestInfo.appId}}</el-descriptions-item>
+          <el-descriptions-item label="提测说明" :span="2">{{requestInfo.scope}}</el-descriptions-item>
+          <el-descriptions-item label="代码地址" :span="2">{{requestInfo.gitCode}}</el-descriptions-item>
+          <el-descriptions-item label="测试文档" :span="2">{{requestInfo.wiki}}</el-descriptions-item>
+          <el-descriptions-item label="更多信息" :span="2">{{requestInfo.more}}</el-descriptions-item>
+        </el-descriptions>
+      </el-dialog>
+    </div>
+    <div>
+      <el-dialog :title="'[测试报告]' + reportInfo.title" :visible.sync="reportInfoVisible">
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="测试结果">{{formatReportInfoStatus(reportInfo.status)}}</el-descriptions-item>
+          <el-descriptions-item label="测试结论">{{reportInfo.test_desc}}</el-descriptions-item>
+          <el-descriptions-item label="风险提示">{{reportInfo.test_risks}}</el-descriptions-item>
+          <el-descriptions-item label="测试内容">{{reportInfo.test_cases}}</el-descriptions-item>
+          <el-descriptions-item label="发现缺陷">{{reportInfo.test_bugs}}</el-descriptions-item>
+          <el-descriptions-item v-if="reportInfo.test_file !==''" label="附件">
+            <a :href="'http://127.0.0.1:5000/api/file/download?name='+reportInfo.test_file">{{reportInfo.test_file}}</a>
+          </el-descriptions-item>
+          <el-descriptions-item label="备注">{{reportInfo.test_note}}</el-descriptions-item>
+          <el-descriptions-item label="已发邮件">{{reportInfo.test_email===1?'已发送':'未发送或失败'}}</el-descriptions-item>
+        </el-descriptions>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
 <script>
 import { apiAppsProduct } from '@/api/apps'
-import { apiTestSearch } from '@/api/test.js'
+import { apiTestSearch, changeStatus } from '@/api/test.js'
 import moment from 'moment'
 
 export default {
@@ -131,19 +162,22 @@ export default {
           }
         }]
       },
-      // 所属分类选项-沿用应用管理
       optsProduct: [],
-      // 数据表格展示和分页变量数据定义
       testData: [],
       pageValues: {
         pageSize: 10,
         currentPage: 1,
         total: 0
-      }
+      },
+      loading: false,
+      requestInfoVisible: false,
+      requestInfo: {},
+      reportInfoVisible: false,
+      reportInfo: {}
     }
   },
   mounted() {
-    if (this.$route.params.needUp && this.$route.params.needUp === 'true') {
+    if (this.$route.params.needUp && this.$route.params.needUp.needUp === 'true') {
       this.searchClick()
     }
   },
@@ -196,6 +230,7 @@ export default {
       })
     },
     searchClick() {
+      this.loading = true
       const body = {
         pageSize: this.pageValues.pageSize,
         currentPage: this.pageValues.currentPage,
@@ -211,6 +246,9 @@ export default {
         this.testData = response.data
         this.pageValues.total = response.total
       })
+      setTimeout(() => {
+        this.loading = false
+      }, 300)
     },
     handleSizeChange(val) {
       this.pageValues.pageSize = val
@@ -220,19 +258,79 @@ export default {
       this.pageValues.currentPage = val
       this.searchClick()
     },
-    doCommit() {
-      this.$router.push({ name: 'commit', params: { action: 'ADD' }})
+    doCommit(row) {
+      this.$router.push({ path: '/tmp/commit?action=ADD' })
     },
     doUpdate(row) {
       this.$router.push({ path: '/tmp/commit?action=UPDATE&id=' + row.id })
     },
-    startTest() {
-      console.log('开始测试')
+    startTest(row) {
+      const reqBody = {
+        id: row.id,
+        status: 'start'
+      }
+      changeStatus(reqBody).then(resp => {
+        this.$message({
+          message: resp.message,
+          type: 'success'
+        })
+        this.searchClick()
+      })
+    },
+    deleteTest(row) {
+      const reqBody = {
+        id: row.id,
+        status: 'delete'
+      }
+      changeStatus(reqBody).then(resp => {
+        this.$message({
+          message: resp.message,
+          type: 'success'
+        })
+        this.searchClick()
+      })
+    },
+    showRequestInfo(row) {
+      this.requestInfo = row
+      this.requestInfoVisible = true
+    },
+    formatInfoType(type) {
+      switch (type) {
+        case 1:
+          return '功能测试'
+        case 2:
+          return '性能测试'
+        case 3:
+          return '安全测试'
+        default:
+          return '未知状态'
+      }
+    },
+    doReport(row) {
+      this.$router.push({ name: 'report', params: { action: 'ADD', id: row.id }})
+    },
+    updateReport(row) {
+      this.$router.push({ name: 'report', params: { action: 'UPDATE', id: row.id }})
+    },
+    showReportInfo(row) {
+      this.reportInfo = row
+      this.reportInfoVisible = true
+    },
+    formatReportInfoStatus(status) {
+      if (status === 3) {
+        return '测试通过'
+      } else if (status === 4) {
+        return '测试失败'
+      } else if (status === 9) {
+        return '测试废弃'
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-
+.el-pagination {
+  text-align: right;
+}
 </style>

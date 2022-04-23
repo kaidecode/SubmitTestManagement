@@ -79,7 +79,7 @@ export const constantRoutes = [
     path: '/tmp',
     component: Layout,
     redirect: '/tmp',
-    meta: { title: '提测管理', icon: 'dashboard' },
+    meta: { title: '提测平台', icon: 'dashboard' },
     children: [
       {
         path: 'test',
@@ -95,6 +95,13 @@ export const constantRoutes = [
         meta: { title: '需求提测', icon: 'dashboard' }
       },
       {
+        path: '/report',
+        name: 'report',
+        hidden: true,
+        component: () => import('@/views/test/manger/report'),
+        meta: { title: '测试报告' }
+      }
+      /* {
         path: 'mytest',
         name: 'mytest',
         component: () => import('@/views/test/mytest'),
@@ -105,7 +112,7 @@ export const constantRoutes = [
         name: 'mydev',
         component: () => import('@/views/test/mydev'),
         meta: { title: '我的测试', icon: 'dashboard' }
-      }
+      } */
     ]
   },
 
